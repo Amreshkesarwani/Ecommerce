@@ -1,0 +1,351 @@
+﻿
+@{
+    ViewData["Title"] = "List";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="content-wrapper" id="divPageBody" style="min-height: 593px;">
+
+    <!-- BEGIN PAGE HEADER-->
+    <section class="content-header">
+        <h1>Doctors <small>doctor listing</small></h1>
+        <ol class="breadcrumb">
+            <li><a href="/"><i class="fa fa-home"></i> Home</a></li>
+            <li class="active">Doctors</li>
+        </ol>
+    </section>
+    <!-- END PAGE HEADER-->
+    <section class="content">
+        <div class="row">
+            <div class="col-xs-12">
+                <div class="box">
+                    <div class="box-header">
+                        <div class="message-box"></div>
+                    </div>
+                    <div class="box-body">
+
+
+                        <div class="row">
+                            <div class="col-md-6 col-sm-12 btn-margin-bottom action-buttons">
+                                <div class="btn-group" id="divAddNew">
+                                    <a title="Add new" class="btn btn-block btn-danger btn-flat" href="doctor/Add"><span class="hide-on-mobile">Add New </span><i class="fa fa-plus"></i></a>
+                                </div>
+                                <div class="btn-group" id="divDelete">
+                                    <a id="imgDelete" name="imgDelete" title="Delete" class="btn btn-block btn-primary btn-flat"><span class="hide-on-mobile">Delete </span><i class="fa fa-trash-o"></i></a>
+                                </div>
+                                <div class="btn-group" id="divActive">
+                                    <a id="imgActive" name="imgActive" title="Active" class="btn btn-block btn-primary btn-flat"><span class="hide-on-mobile">Active </span><i class="fa fa-check"></i></a>
+                                </div>
+                                <div class="btn-group" id="divInactive">
+                                    <a id="imgInactive" name="imgInactive" title="Inactive" class="btn btn-block btn-primary btn-flat"><span class="hide-on-mobile">Inactive </span><i class="fa fa-ban"></i></a>
+                                </div>
+                                <div class="btn-group">
+                                    <a title="Show All" class="btn btn-block btn-primary btn-flat" onclick="showAllRecords();"><span class="hide-on-mobile">Show All&nbsp;&nbsp;</span><i class="fa fa-th-list"></i></a>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-sm-12">
+                                <div class="pull-right">
+                                    <select id="ddlFilter" onchange="return SearchOption();" class="ddlFilter form-control input-sm input-small input-inline" selectedindex="0">
+                                        <option value="-- Select --">-- Select --</option>
+                                        <option value="FirstName">First Name</option>
+                                        <option value="LastName">Last Name</option>
+                                        <option value="Email">Email</option>
+                                        <option value="Phone">Phone</option>
+                                        <option value="IsActive">Status</option>
+                                    </select>
+                                    <input type="text" id="txtSearchField" class="form-control input-sm input-small input-inline">
+                                    <select id="ddlStatus" class="form-control input-sm input-small input-inline" style="display: none;">
+                                        <option value="1">Active</option>
+                                        <option value="0">Inactive</option>
+                                    </select>
+                                    <a title="Search" class="btn btn-primary btn-flat" onclick="SearchValidationForFilter();"><i class="fa fa-search"></i></a>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <script type="text/javascript">
+                            var pageNo = '1';
+                            var pageSize = '10';
+                            var searchField = '';
+                            var searchValue = '';
+                            var sortField = 'FirstName';
+                            var sortOrder = 'ASC';
+                            var itemListCount = '6';
+
+                            $(document).ready(function () {
+
+                                pageLoad();
+                                if (searchField == "Status" || searchField == "IsActive") {
+                                    $('#ddlStatus').show();
+                                    $('#txtSearchField').hide();
+                                    $('#txtSearchField').val('');
+                                    $('#ddlStatus').val(searchValue);
+                                }
+                                else {
+                                    $('#ddlStatus').hide();
+                                    $('#txtSearchField').show();
+                                    $('#txtSearchField').val(searchValue);
+                                    $('#ddlStatus').val('1');
+                                }
+
+                                // filter drop down binging event
+                                $('td.search_field').each(function () {
+                                    $('<option>').val($(this).attr('search_field_value')).text($(this).text()).appendTo('#ddlFilter');
+                                });
+
+                                if (searchField == '') {
+                                    $('.ddlFilter').attr('selectedIndex', 0);
+                                }
+                                else {
+                                    $('.ddlFilter').val(searchField);
+                                }
+
+
+                            });
+
+                            // search filter event
+                            function SearchValidationForFilter() {
+                                if ($('#ddlFilter').val() == '-- Select --') {
+                                    jAlert('Please select any value from filter criteria!', alertTitle, function () {
+                                        $('#ddlFilter').focus();
+                                    });
+                                }
+                                else if ($('#txtSearchField').is(':visible') && $('#txtSearchField')) {
+                                    if (Trim($('#txtSearchField').val()) == '' && $('#ddlFilter').val() != 'IsStatus' && $('#ddlFilter').val() != 'Status') {
+                                        jAlert('Please enter any value for filter!', alertTitle, function () {
+                                            $('#txtSearchField').focus();
+                                        });
+                                    }
+                                    else {
+                                        searchValue = $('#txtSearchField').val();
+                                    }
+                                }
+                                else {
+                                    searchValue = $('#ddlStatus').val();
+                                }
+
+                                searchField = $('#ddlFilter').val();
+
+                                if (searchValue != '') {
+                                    var postData = { "pageSize": pageSize, "searchField": searchField, "searchValue": searchValue, "sortField": sortField, "sortOrder": sortOrder };
+                                    callPageAction(currentSiteUrl, postData, 'Searching');
+                                }
+                            }
+
+                            // show all button event
+                            function showAllRecords() {
+                                var postData = { "pageSize": pageSize, "sortField": sortField, "sortOrder": sortOrder };
+                                callPageAction(currentSiteUrl, postData, 'ViewAll');
+                            }
+                        </script>
+
+                        <script type="text/javascript">
+                            var currentSiteUrl = '/doctor';
+
+                            $(document).ready(function () {
+
+                                if ('True' == 'False') {
+                                    $(":checkbox").uniform({ resetSelector: true });
+                                }
+
+                                $('#ddlPageSize').val(pageSize);
+
+                                var sortedElement = $('td[search_field_value="' + sortField + '"]');
+                                sortOrder == 'ASC' ? sortedElement.addClass('ascending') : sortedElement.addClass('descending');
+
+                                // listing page status(active/inactive) and delete grid button event
+                                $(".SetStatusClick").click(function () {
+                                    ActionClickEvent(this.id, this.name);
+                                });
+
+                                //page size drop down change event
+                                $('#ddlPageSize').change(function () {
+                                    var postData = { "pageSize": $(this).val(), "searchField": searchField, "searchValue": searchValue, "sortField": sortField, "sortOrder": sortOrder };
+                                    callPageAction(currentSiteUrl, postData, '');
+                                });
+
+                                //grid sorting event
+                                $('td.search_field').click(function () {
+                                    sortField = $(this).attr('search_field_value');
+                                    sortOrder = sortOrder == 'ASC' ? 'DESC' : 'ASC';
+
+                                    var postData = { "pageSize": $('#ddlPageSize').val(), "searchField": searchField, "searchValue": searchValue, "sortField": sortField, "sortOrder": sortOrder };
+                                    callPageAction(currentSiteUrl, postData, '');
+                                });
+
+                                if ('' != null && '' != '') {
+                                    notificationMessage('', 'success')
+                                }
+
+                            });
+                        </script>
+
+
+
+
+                        <div class="row">
+                            <div class="col-md-6 col-sm-12">
+                                <div class="margin-top-10">
+                                    Showing 1 - 5 record(s) of 6
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-sm-12" style="margin-left: 0px;">
+                                <div class="dataTables_paginate paging_bootstrap_full_number">
+                                    <div class="pagination-container"><ul class="pagination"><li class="active"><a>1</a></li></ul></div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="row">
+                            <div class="col-md-12 col-sm-12 datagrid">
+                                <table cellspacing="1" cellpadding="2" style="width: 100%;" id="dgList" class="table table-striped table-hover table-bordered table-hd">
+                                    <thead>
+                                        <tr class="gridheader">
+                                            <td valign="middle" align="center" style="width: 2%;">
+                                                <div class="checker" id="uniform-chkAll"><span><input id="chkAll" onclick="javascript: checkAll();" type="checkbox" name="chkAll"></span></div>
+                                            </td>
+                                            <td style="width: 21%;" class="search_field ascending" search_field_value="FirstName">First Name</td>
+                                            <td style="width: 20%;" class="search_field" search_field_value="LastName">Last Name</td>
+                                            <td class="search_field" search_field_value="Email">Email</td>
+                                            <td class="search_field" search_field_value="Phone">Phone</td>
+                                            <td style="width: 5%;" class="text-center search_field" search_field_value="IsActive">Status</td>
+                                            <td style="width: 5%;" class="text-center">Edit</td>
+                                            <td style="width: 5%;" class="text-center">Delete</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td valign="middle" align="center" style="width: 2%;">
+                                                <div class="checker" id="uniform-chkBox"><span><input id="chkBox" name="chkBox" type="checkbox" onclick="javascript: checkManual();" value="38"></span></div>
+                                            </td>
+                                            <td>Brett</td>
+                                            <td>Ryser</td>
+                                            <td>brett.ryser@email.com</td>
+                                            <td>123454322</td>
+                                            <td style="width: 5%;" class="text-center">
+                                                <a onclick="return SetActiveInactive(this);" class="SetStatusClick" name="imgActive" title="Click to make active" id="imgActive" style="text-decoration: none" href="javascript:void(0)"><i class="fa fa-ban"></i></a>
+                                            </td>
+                                            <td style="width: 5%;" class="text-center">
+                                                <a href="Doctor/Add/38" title="Click here to edit"><i class="fa fa-edit"></i></a>
+                                            </td>
+                                            <td style="width: 5%;" class="text-center">
+                                                <a onclick="return SetActiveInactive(this);" class="SetStatusClick" name="imgDelete" title="Click here to delete" id="imgDelete" style="text-decoration: none" href="javascript:void(0)"><i class="fa fa-trash-o"></i></a>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td valign="middle" align="center" style="width: 2%;">
+                                                <div class="checker" id="uniform-chkBox"><span><input id="chkBox" name="chkBox" type="checkbox" onclick="javascript: checkManual();" value="9"></span></div>
+                                            </td>
+                                            <td>Glory</td>
+                                            <td>Culzer</td>
+                                            <td>glory.culzer@email.com</td>
+                                            <td>123456789</td>
+                                            <td style="width: 5%;" class="text-center">
+                                                <a onclick="return SetActiveInactive(this);" class="SetStatusClick" name="imgActive" title="Click to make active" id="imgActive" style="text-decoration: none" href="javascript:void(0)"><i class="fa fa-ban"></i></a>
+                                            </td>
+                                            <td style="width: 5%;" class="text-center">
+                                                <a href="Doctor/Add/9" title="Click here to edit"><i class="fa fa-edit"></i></a>
+                                            </td>
+                                            <td style="width: 5%;" class="text-center">
+                                                <a onclick="return SetActiveInactive(this);" class="SetStatusClick" name="imgDelete" title="Click here to delete" id="imgDelete" style="text-decoration: none" href="javascript:void(0)"><i class="fa fa-trash-o"></i></a>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td valign="middle" align="center" style="width: 2%;">
+                                                <div class="checker" id="uniform-chkBox"><span><input id="chkBox" name="chkBox" type="checkbox" onclick="javascript: checkManual();" value="36"></span></div>
+                                            </td>
+                                            <td>Lai</td>
+                                            <td>Gato</td>
+                                            <td>lai.gato@email.com</td>
+                                            <td>123456789</td>
+                                            <td style="width: 5%;" class="text-center">
+                                                <a onclick="return SetActiveInactive(this);" class="SetStatusClick" name="imgInactive" title="Click to make inactive" id="imgInactive" style="text-decoration: none" href="javascript:void(0)"><i class="fa fa-check"></i></a>
+                                            </td>
+                                            <td style="width: 5%;" class="text-center">
+                                                <a href="Doctor/Add/36" title="Click here to edit"><i class="fa fa-edit"></i></a>
+                                            </td>
+                                            <td style="width: 5%;" class="text-center">
+                                                <a onclick="return SetActiveInactive(this);" class="SetStatusClick" name="imgDelete" title="Click here to delete" id="imgDelete" style="text-decoration: none" href="javascript:void(0)"><i class="fa fa-trash-o"></i></a>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td valign="middle" align="center" style="width: 2%;">
+                                                <div class="checker" id="uniform-chkBox"><span><input id="chkBox" name="chkBox" type="checkbox" onclick="javascript: checkManual();" value="47"></span></div>
+                                            </td>
+                                            <td>Manu</td>
+                                            <td>Shavas</td>
+                                            <td>manu@gmail.com</td>
+                                            <td>0767456237</td>
+                                            <td style="width: 5%;" class="text-center">
+                                                <a onclick="return SetActiveInactive(this);" class="SetStatusClick" name="imgInactive" title="Click to make inactive" id="imgInactive" style="text-decoration: none" href="javascript:void(0)"><i class="fa fa-check"></i></a>
+                                            </td>
+                                            <td style="width: 5%;" class="text-center">
+                                                <a href="Doctor/Add/47" title="Click here to edit"><i class="fa fa-edit"></i></a>
+                                            </td>
+                                            <td style="width: 5%;" class="text-center">
+                                                <a onclick="return SetActiveInactive(this);" class="SetStatusClick" name="imgDelete" title="Click here to delete" id="imgDelete" style="text-decoration: none" href="javascript:void(0)"><i class="fa fa-trash-o"></i></a>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td valign="middle" align="center" style="width: 2%;">
+                                                <div class="checker" id="uniform-chkBox"><span><input id="chkBox" name="chkBox" type="checkbox" onclick="javascript: checkManual();" value="55"></span></div>
+                                            </td>
+                                            <td>vandana</td>
+                                            <td>Harawat</td>
+                                            <td>Vsingh1999@gmail.com</td>
+                                            <td>6543456765</td>
+                                            <td style="width: 5%;" class="text-center">
+                                                <a onclick="return SetActiveInactive(this);" class="SetStatusClick" name="imgInactive" title="Click to make inactive" id="imgInactive" style="text-decoration: none" href="javascript:void(0)"><i class="fa fa-check"></i></a>
+                                            </td>
+                                            <td style="width: 5%;" class="text-center">
+                                                <a href="Doctor/Add/55" title="Click here to edit"><i class="fa fa-edit"></i></a>
+                                            </td>
+                                            <td style="width: 5%;" class="text-center">
+                                                <a onclick="return SetActiveInactive(this);" class="SetStatusClick" name="imgDelete" title="Click here to delete" id="imgDelete" style="text-decoration: none" href="javascript:void(0)"><i class="fa fa-trash-o"></i></a>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+
+                        <div class="row">
+                            <div class="col-md-3 col-sm-12">
+                                <div>
+                                    Showing 1 - 5 record(s) of 6
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-sm-12">
+                                <div>
+                                    <label>
+                                        <select class="form-control input-sm input-small input-inline" id="ddlPageSize" name="ddlPageSize">
+                                            <option selected="selected" value="10">Default (10)</option>
+                                            <option value="20">20</option>
+                                            <option value="30">30</option>
+                                            <option value="50">50</option>
+                                            <option value="100">100</option>
+                                            <option value="200">200</option>
+                                            <option value="500">500</option>
+                                        </select>
+                                        <span style="vertical-align: middle;">Record(s) per page</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-12">
+                                <div class="dataTables_paginate paging_bootstrap_full_number">
+                                    <div class="pagination-container"><ul class="pagination"><li class="active"><a>1</a></li></ul></div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
